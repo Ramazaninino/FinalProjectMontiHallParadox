@@ -1,0 +1,81 @@
+{
+  "app_title": "Парадокс Монти Холла",
+  "main_screen": {
+    "title": "THE MONTY HALL PARADOX",
+    "subtitle": "История игр",
+    "no_games": "Нет игр. Нажмите + чтобы начать!",
+    "total_sessions": "Игровых сессий",
+    "total_games": "Всего игр",
+    "win_rate": "Общий % побед",
+    "export_all": "Экспорт CSV",
+    "language": "EN"
+  },
+  "card": {
+    "doors": "дверей",
+    "games": "игр",
+    "wins": "побед",
+    "win_rate": "Побед",
+    "mode_manual": "Ручной",
+    "mode_auto": "Авто",
+    "play": "Играть",
+    "delete": "Удалить",
+    "export": "CSV"
+  },
+  "new_game": {
+    "title": "Новая игра",
+    "name_label": "Название игры",
+    "name_placeholder": "Введите название...",
+    "doors_label": "Количество дверей",
+    "mode_label": "Режим игры",
+    "mode_manual": "Ручной",
+    "mode_auto": "Автоматический",
+    "auto_games_label": "Количество игр (авто)",
+    "auto_games_placeholder": "Напр. 1000",
+    "create": "Создать игру",
+    "cancel": "Отмена",
+    "error_name": "Введите название игры",
+    "error_auto_games": "Введите корректное количество игр (1-100000)",
+    "error_doors": "Выберите от 3 до 20 дверей"
+  },
+  "game_screen": {
+    "back": "← Назад",
+    "params_title": "Параметры игры",
+    "doors": "Дверей:",
+    "mode": "Режим:",
+    "rounds": "Сыгранных игр:",
+    "wins": "Побед:",
+    "win_rate": "Процент побед:",
+    "phase_select": "Выберите дверь",
+    "phase_switch": "Монти открыл двери. Поменять?",
+    "switch": "Сменить дверь",
+    "keep": "Оставить дверь",
+    "won_title": "Победа! 🏆",
+    "lost_title": "Проигрыш 😞",
+    "switched_yes": "Сменили дверь",
+    "switched_no": "Оставили дверь",
+    "new_round": "Новый раунд",
+    "finish": "Завершить",
+    "door_closed": "Дверь",
+    "door_goat": "Коза",
+    "door_prize": "Приз!",
+    "door_open_goat": "🐐",
+    "door_open_prize": "🏆",
+    "door_closed_icon": "🚪"
+  },
+  "auto_result": {
+    "title": "Результаты симуляции",
+    "total": "Игр сыграно:",
+    "switch_strategy": "Стратегия «Смена»:",
+    "stay_strategy": "Стратегия «Остаться»:",
+    "conclusion": "Вывод: смена двери побеждает в ~{rate}% случаев!",
+    "close": "Закрыть"
+  },
+  "confirm_delete": {
+    "title": "Удалить игру?",
+    "message": "Вы уверены, что хотите удалить игровую сессию \"{name}\"?",
+    "yes": "Удалить",
+    "no": "Отмена"
+  },
+  "export_success": "Экспортировано: {path}",
+  "error": "Ошибка"
+}

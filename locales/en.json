@@ -1,0 +1,81 @@
+{
+  "app_title": "Monty Hall Paradox",
+  "main_screen": {
+    "title": "THE MONTY HALL PARADOX",
+    "subtitle": "Game History",
+    "no_games": "No games yet. Press + to start!",
+    "total_sessions": "Game Sessions",
+    "total_games": "Total Games",
+    "win_rate": "Overall Win Rate",
+    "export_all": "Export CSV",
+    "language": "RU"
+  },
+  "card": {
+    "doors": "doors",
+    "games": "games",
+    "wins": "wins",
+    "win_rate": "Win Rate",
+    "mode_manual": "Manual",
+    "mode_auto": "Auto",
+    "play": "Play",
+    "delete": "Delete",
+    "export": "CSV"
+  },
+  "new_game": {
+    "title": "New Game",
+    "name_label": "Game Name",
+    "name_placeholder": "Enter name...",
+    "doors_label": "Number of Doors",
+    "mode_label": "Game Mode",
+    "mode_manual": "Manual",
+    "mode_auto": "Automatic",
+    "auto_games_label": "Number of Games (auto)",
+    "auto_games_placeholder": "e.g. 1000",
+    "create": "Create Game",
+    "cancel": "Cancel",
+    "error_name": "Please enter a game name",
+    "error_auto_games": "Enter a valid number of games (1-100000)",
+    "error_doors": "Select 3 to 20 doors"
+  },
+  "game_screen": {
+    "back": "← Back",
+    "params_title": "Game Parameters",
+    "doors": "Doors:",
+    "mode": "Mode:",
+    "rounds": "Rounds played:",
+    "wins": "Wins:",
+    "win_rate": "Win rate:",
+    "phase_select": "Choose a door",
+    "phase_switch": "Monty opened doors. Switch?",
+    "switch": "Switch Door",
+    "keep": "Keep Door",
+    "won_title": "You Won! 🏆",
+    "lost_title": "You Lost 😞",
+    "switched_yes": "You switched",
+    "switched_no": "You stayed",
+    "new_round": "New Round",
+    "finish": "Finish",
+    "door_closed": "Door",
+    "door_goat": "Goat",
+    "door_prize": "Prize!",
+    "door_open_goat": "🐐",
+    "door_open_prize": "🏆",
+    "door_closed_icon": "🚪"
+  },
+  "auto_result": {
+    "title": "Simulation Results",
+    "total": "Total games:",
+    "switch_strategy": "Switch strategy:",
+    "stay_strategy": "Stay strategy:",
+    "conclusion": "Conclusion: switching wins ~{rate}% of the time!",
+    "close": "Close"
+  },
+  "confirm_delete": {
+    "title": "Delete Game?",
+    "message": "Are you sure you want to delete game session \"{name}\"?",
+    "yes": "Delete",
+    "no": "Cancel"
+  },
+  "export_success": "Exported: {path}",
+  "error": "Error"
+}
