@@ -1,19 +1,4 @@
-"""
-Monty Hall Paradox — Student Final Project
-Course: Introduction to Speciality (Semester II)
-Instructor: Muratov Kanat
 
-Topics covered:
-  Week 2  — OOP: Functions, Classes, Objects
-  Week 4  — Magic Methods: __str__, __repr__, __init__, __eq__, __len__
-  Week 5  — OOP: Encapsulation, Inheritance, Polymorphism
-  Week 6  — Desktop Application: CustomTkinter (Entry, Label, Button, Frame, Slider...)
-  Week 10 — Database: sqlite3
-  Week 11 — Desktop App + sqlite3 integration
-  Week 12 — SQL: SELECT, LEFT JOIN, GROUP BY
-  Week 13 — Data Formats: CSV export
-  Week 14 — MultiLanguage: JSON-based i18n (ru / en)
-"""
 
 import customtkinter as ctk
 from database.db_manager import DatabaseManager
@@ -47,8 +32,8 @@ class App(ctk.CTk):
         self._container = ctk.CTkFrame(self, fg_color="transparent")
         self._container.pack(fill="both", expand=True)
 
-        # Start on main screen
-        self.show_main_screen()
+        # Start on splash screen
+        self.show_splash_screen()
 
     def __str__(self):
         return f"App(title='{self.lang('app_title')}')"
@@ -59,6 +44,11 @@ class App(ctk.CTk):
     def _clear(self):
         for widget in self._container.winfo_children():
             widget.destroy()
+
+    def show_splash_screen(self):
+        from ui.splash_screen import SplashScreen
+        self._clear()
+        SplashScreen(self._container, self).pack(fill="both", expand=True)
 
     def show_main_screen(self):
         from ui.main_screen import MainScreen

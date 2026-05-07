@@ -151,7 +151,7 @@ class NewGameDialog(ctk.CTkToplevel):
             command=self._on_mode_change
         ).pack(side="left", padx=20, pady=14)
 
-        # Auto games count (hidden by default)
+        # Auto games count (hidden by default, inside content)
         self._auto_frame = ctk.CTkFrame(content, fg_color="transparent")
 
         ctk.CTkLabel(
@@ -168,10 +168,11 @@ class NewGameDialog(ctk.CTkToplevel):
             fg_color=FIELD_BG, border_color=BORDER,
             text_color=TEXT_PRIMARY,
             placeholder_text_color=TEXT_MUTED,
-            height=42, corner_radius=10
+            height=42, corner_radius=10,
         )
         self._auto_entry.pack(fill="x")
         self._auto_entry.insert(0, "1000")
+        # not packed yet — shown only in auto mode
 
         # Buttons row
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -204,13 +205,7 @@ class NewGameDialog(ctk.CTkToplevel):
 
     def _on_mode_change(self):
         if self.__mode_var.get() == "auto":
-            self._auto_frame.pack(fill="x", padx=32, before=self._auto_frame.master.winfo_children()[-1] if self._auto_frame.master.winfo_children() else None)
-            # Repack properly
-            self._auto_frame.pack_forget()
-            # Find the button frame and insert before it
-            children = self.winfo_children()
-            btn_frame = children[-1]
-            self._auto_frame.pack(fill="x", padx=32, pady=(0, 8), before=btn_frame)
+            self._auto_frame.pack(fill="x", pady=(0, 4))
         else:
             self._auto_frame.pack_forget()
 
@@ -218,12 +213,12 @@ class NewGameDialog(ctk.CTkToplevel):
         l = self.__lang
         name = self._name_entry.get().strip()
         if not name:
-            messagebox.showerror(l("error"), l("new_game", "error_name"), parent=self)
+            messagebox.showerror(l("error"), l("new_game", "error_name"))
             return
 
         doors = self.__doors_var.get()
         if doors < 3 or doors > 20:
-            messagebox.showerror(l("error"), l("new_game", "error_doors"), parent=self)
+            messagebox.showerror(l("error"), l("new_game", "error_doors"))
             return
 
         mode = self.__mode_var.get()
@@ -235,7 +230,7 @@ class NewGameDialog(ctk.CTkToplevel):
                 if num_games < 1 or num_games > 100_000:
                     raise ValueError
             except ValueError:
-                messagebox.showerror(l("error"), l("new_game", "error_auto_games"), parent=self)
+                messagebox.showerror(l("error"), l("new_game", "error_auto_games"))
                 return
 
         if mode == "manual":
@@ -247,87 +242,19 @@ class NewGameDialog(ctk.CTkToplevel):
         from models.game import ManualGame
         session_id = self.__db.create_session(name, doors, "manual")
         game = ManualGame(game_id=session_id, name=name, door_count=doors)
+        # Store result for caller (MainScreen) to pick up after wait_window()
+        self.pending_game = (game, session_id)
+        self.pending_auto_results = None
         self.destroy()
-        self.__app.show_game_screen(game, session_id)
 
     def _start_auto_game(self, name: str, doors: int, num_games: int):
         from models.game import AutoGame
         session_id = self.__db.create_session(name, doors, "auto", num_games)
         game = AutoGame(game_id=session_id, name=name, door_count=doors, num_games=num_games)
-
-        # Run simulation immediately
         results = game.simulate()
-
-        # Save to database
-        self.__db.update_session_stats(session_id, results["total"], results["switch_wins"])
-
+        self.__db.update_session_stats(session_id, results["total"], results["wins"])
+        # Store results for caller to show after wait_window()
+        self.pending_game = None
+        self.pending_auto_results = (results, num_games, doors)
         self.destroy()
 
-        # Show result dialog on main screen
-        self._show_auto_results(results, num_games, doors)
-
-    def _show_auto_results(self, results: dict, num_games: int, doors: int):
-        l = self.__lang
-        dialog = ctk.CTkToplevel(self.__app)
-        dialog.title(l("auto_result", "title"))
-        dialog.geometry("440x380")
-        dialog.resizable(False, False)
-        dialog.configure(fg_color=BG)
-        dialog.grab_set()
-
-        # Center
-        dialog.update_idletasks()
-        px = self.__app.winfo_x() + (self.__app.winfo_width() - 440) // 2
-        py = self.__app.winfo_y() + (self.__app.winfo_height() - 380) // 2
-        dialog.geometry(f"+{px}+{py}")
-
-        ctk.CTkLabel(
-            dialog, text=l("auto_result", "title"),
-            font=ctk.CTkFont(size=20, weight="bold"),
-            text_color=TEXT_PRIMARY
-        ).pack(pady=(28, 16))
-
-        info = ctk.CTkFrame(dialog, fg_color=BG_CARD, corner_radius=14, border_color=BORDER, border_width=1)
-        info.pack(fill="x", padx=32, pady=8)
-
-        rows = [
-            (l("auto_result", "total"), str(results["total"])),
-            (l("auto_result", "switch_strategy"), f"{results['switch_wins']} ({results['switch_rate']:.1f}%)"),
-            (l("auto_result", "stay_strategy"), f"{results['stay_wins']} ({results['stay_rate']:.1f}%)"),
-        ]
-        for label, value in rows:
-            row = ctk.CTkFrame(info, fg_color="transparent")
-            row.pack(fill="x", padx=16, pady=6)
-            ctk.CTkLabel(row, text=label, font=ctk.CTkFont(size=12),
-                         text_color=TEXT_SECONDARY, anchor="w").pack(side="left")
-            ctk.CTkLabel(row, text=value, font=ctk.CTkFont(size=13, weight="bold"),
-                         text_color=TEXT_PRIMARY, anchor="e").pack(side="right")
-
-        # Win rate bar for switch
-        bar_frame = ctk.CTkFrame(dialog, fg_color="transparent")
-        bar_frame.pack(fill="x", padx=32, pady=8)
-        ctk.CTkLabel(bar_frame, text=f"Switch: {results['switch_rate']:.1f}%",
-                     font=ctk.CTkFont(size=11), text_color=ACCENT).pack(anchor="w")
-        bg = ctk.CTkFrame(bar_frame, fg_color=BORDER, height=8, corner_radius=4)
-        bg.pack(fill="x", pady=(4, 0))
-        bg.pack_propagate(False)
-        fill = ctk.CTkFrame(bg, fg_color=ACCENT, height=8, corner_radius=4)
-        fill.place(relx=0, rely=0, relwidth=results["switch_rate"] / 100, relheight=1)
-
-        ctk.CTkLabel(
-            dialog,
-            text=l("auto_result", "conclusion", rate=results["switch_rate"]),
-            font=ctk.CTkFont(size=12),
-            text_color=TEXT_SECONDARY,
-            wraplength=380
-        ).pack(padx=32, pady=12)
-
-        ctk.CTkButton(
-            dialog,
-            text=l("auto_result", "close"),
-            font=ctk.CTkFont(size=13, weight="bold"),
-            fg_color=ACCENT, hover_color=ACCENT_HOVER,
-            text_color=TEXT_PRIMARY,
-            height=44, corner_radius=10,
-            command=dialog.destroy
-        ).pack(padx=32, pady=(0, 24), fill="x")

@@ -46,7 +46,8 @@
     "wins": "Wins:",
     "win_rate": "Win rate:",
     "phase_select": "Choose a door",
-    "phase_switch": "Monty opened doors. Switch?",
+    "phase_switch": "Monty revealed a goat door!",
+    "phase_switch_hint": "Click another door to switch, or press Keep",
     "switch": "Switch Door",
     "keep": "Keep Door",
     "won_title": "You Won! 🏆",
@@ -65,9 +66,9 @@
   "auto_result": {
     "title": "Simulation Results",
     "total": "Total games:",
-    "switch_strategy": "Switch strategy:",
-    "stay_strategy": "Stay strategy:",
-    "conclusion": "Conclusion: switching wins ~{rate}% of the time!",
+    "wins_label": "Wins:",
+    "win_rate_label": "Win rate:",
+    "conclusion": "Guessed the correct door ~{rate}% of the time!",
     "close": "Close"
   },
   "confirm_delete": {

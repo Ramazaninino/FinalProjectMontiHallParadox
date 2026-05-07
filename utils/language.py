@@ -45,7 +45,17 @@ class Language:
 
     def on_change(self, callback):
         """Register a callback to be called when language changes."""
-        self.__callbacks.append(callback)
+        if callback not in self.__callbacks:
+            self.__callbacks.append(callback)
+
+    def remove_callback(self, callback):
+        """Unregister a previously registered callback."""
+        if callback in self.__callbacks:
+            self.__callbacks.remove(callback)
+
+    def clear_callbacks(self):
+        """Remove all registered callbacks."""
+        self.__callbacks.clear()
 
     def get(self, *keys: str, **fmt) -> str:
         """

@@ -98,22 +98,19 @@ class BaseGame(ABC):
 
     def _monty_opens_doors(self):
         """
-        Monty opens all losing doors except:
-          - the player's chosen door
-          - one other closed door (to give player a choice)
-        Result: 2 doors remain closed (player's + 1 other).
+        Monty opens exactly ONE losing door that:
+          - is not the player's chosen door
+          - does not have the prize
+        This keeps all other doors closed so the player can choose
+        which door to switch to (more interactive, classic UX).
         """
         losers = [
             d for d in self._doors
             if not d.has_prize and not d.is_selected
         ]
-        # Keep one loser closed so player can switch to it
-        keep_closed = random.choice(losers)
-
-        for door in losers:
-            if door != keep_closed:
-                door.open()
-                self._monty_opened.append(door)
+        revealed = random.choice(losers)
+        revealed.open()
+        self._monty_opened = [revealed]
 
     def select_door(self, door_number: int) -> bool:
         """Player picks a door. Returns True if selection succeeded."""
@@ -132,22 +129,24 @@ class BaseGame(ABC):
         self._phase = "switch_or_keep"
         return True
 
-    def switch_door(self) -> bool:
-        """Player switches to the other remaining closed door. Returns win result."""
+    def switch_door(self, door_number: int) -> bool:
+        """
+        Player switches to a specific door by number.
+        The door must be closed and not currently selected.
+        Returns win result.
+        """
         if self._phase != "switch_or_keep":
             return False
+        if door_number < 1 or door_number > self._door_count:
+            return False
 
-        # Find the remaining closed, unselected door
-        candidates = [
-            d for d in self._doors
-            if not d.is_selected and not d.is_open
-        ]
-        if candidates:
-            self._current_selected.deselect()
-            new_door = candidates[0]
-            new_door.select()
-            self._current_selected = new_door
+        target = self._doors[door_number - 1]
+        if target.is_selected or target.is_open:
+            return False
 
+        self._current_selected.deselect()
+        target.select()
+        self._current_selected = target
         self._last_switched = True
         return self._resolve_result()
 
@@ -213,8 +212,6 @@ class AutoGame(BaseGame):
 
     def __init__(self, game_id: int, name: str, door_count: int, num_games: int):
         self._num_games = num_games
-        self._switch_wins = 0
-        self._stay_wins = 0
         self._simulation_done = False
         super().__init__(game_id, name, door_count)
 
@@ -222,57 +219,27 @@ class AutoGame(BaseGame):
     def num_games(self) -> int:
         return self._num_games
 
-    @property
-    def switch_wins(self) -> int:
-        return self._switch_wins
-
-    @property
-    def stay_wins(self) -> int:
-        return self._stay_wins
-
-    @property
-    def switch_rate(self) -> float:
-        if self._num_games == 0:
-            return 0.0
-        return round(self._switch_wins / self._num_games * 100, 1)
-
-    @property
-    def stay_rate(self) -> float:
-        if self._num_games == 0:
-            return 0.0
-        return round(self._stay_wins / self._num_games * 100, 1)
-
     def simulate(self) -> dict:
         """
-        Run N simulations comparing switch vs stay strategies.
-        Mathematical truth: switch wins (N-1)/N of the time.
+        Run N simulations: randomly pick a door, check if it has the prize.
+        Win rate approaches 1/door_count (pure random guessing).
         """
-        switch_wins = 0
-        stay_wins = 0
+        wins = 0
 
         for _ in range(self._num_games):
             prize_door = random.randint(1, self._door_count)
             player_pick = random.randint(1, self._door_count)
-
             if player_pick == prize_door:
-                # Player picked prize: staying wins, switching loses
-                stay_wins += 1
-            else:
-                # Player picked a goat: switching wins (Monty reveals all other goats)
-                switch_wins += 1
+                wins += 1
 
-        self._switch_wins = switch_wins
-        self._stay_wins = stay_wins
         self._total_rounds = self._num_games
-        self._wins = switch_wins  # "always switch" strategy result
+        self._wins = wins
         self._simulation_done = True
 
         return {
             "total": self._num_games,
-            "switch_wins": switch_wins,
-            "stay_wins": stay_wins,
-            "switch_rate": round(switch_wins / self._num_games * 100, 1),
-            "stay_rate": round(stay_wins / self._num_games * 100, 1),
+            "wins": wins,
+            "win_rate": round(wins / self._num_games * 100, 1),
         }
 
     def get_mode(self) -> str:
