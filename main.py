@@ -33,15 +33,15 @@ class App(ctk.CTk):
         self.minsize(1024, 650)
         self.configure(fg_color=self.theme.BG)
 
-    def _on_theme_change(self):
-        self.configure(fg_color=self.theme.BG)
-
         # Screen container
         self._container = ctk.CTkFrame(self, fg_color="transparent")
         self._container.pack(fill="both", expand=True)
 
         # Start on splash screen
         self.show_splash_screen()
+
+    def _on_theme_change(self):
+        self.configure(fg_color=self.theme.BG)
 
     def __str__(self):
         return f"App(title='{self.lang('app_title')}')"
