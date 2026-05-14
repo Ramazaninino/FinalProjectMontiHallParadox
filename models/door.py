@@ -12,6 +12,7 @@ class Door:
         self.__has_prize = has_prize
         self.__is_open = False
         self.__is_selected = False
+        self.__was_original_pick = False
 
     # Magic Methods
     def __str__(self):
@@ -52,6 +53,10 @@ class Door:
     def is_selected(self) -> bool:
         return self.__is_selected
 
+    @property
+    def was_original_pick(self) -> bool:
+        return self.__was_original_pick
+
     # State management methods
     def open(self):
         self.__is_open = True
@@ -62,6 +67,10 @@ class Door:
     def deselect(self):
         self.__is_selected = False
 
+    def mark_as_original_pick(self):
+        self.__was_original_pick = True
+
     def reset(self):
         self.__is_open = False
         self.__is_selected = False
+        self.__was_original_pick = False

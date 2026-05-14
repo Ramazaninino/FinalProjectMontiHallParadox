@@ -1,30 +1,21 @@
 import tkinter as tk
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
+
 
 def _draw_logo(canvas, bg_color: str, fg_color: str):
     """Draw the T/G/L/K logo with a circle in the center on a tk.Canvas (48x48)."""
     canvas.configure(bg=bg_color)
-    # Four letters at the four corners
     font = ("Arial", 11, "bold")
     canvas.create_text(10, 12, text="T", font=font, fill=fg_color, anchor="center")
     canvas.create_text(38, 12, text="G", font=font, fill=fg_color, anchor="center")
     canvas.create_text(10, 36, text="L", font=font, fill=fg_color, anchor="center")
     canvas.create_text(38, 36, text="K", font=font, fill=fg_color, anchor="center")
-    # Circle centered on the canvas, overlapping all four letters
     canvas.create_oval(12, 6, 36, 42, outline=fg_color, width=1.5)
 
-
-BG = "#000000"
-BG_CARD = "#111111"
-BORDER = "#222222"
-ACCENT = "#EB1D49"
+# Accent never changes between themes
+ACCENT       = "#EB1D49"
 ACCENT_HOVER = "#C91540"
-TEXT_PRIMARY = "#FFFFFF"
-TEXT_SECONDARY = "#94A3B8"
-TEXT_MUTED = "#475569"
-CHIP_BG = "#1A1A1A"
-BAR_BG = "#2A2A2A"
 
 
 class GameCard(ctk.CTkFrame):
@@ -33,16 +24,18 @@ class GameCard(ctk.CTkFrame):
     Demonstrates: OOP, Encapsulation, CustomTkinter widgets
     """
 
-    def __init__(self, parent, session: dict, lang, on_play, on_delete, on_export):
+    def __init__(self, parent, session: dict, lang, theme, on_play, on_delete, on_export):
+        t = theme
         super().__init__(
             parent,
-            fg_color=BG_CARD,
-            border_color=BORDER,
+            fg_color=t.BG_CARD,
+            border_color=t.BORDER,
             border_width=1,
             corner_radius=16,
         )
         self.__session = session
         self.__lang = lang
+        self._t = theme
         self.__on_play = on_play
         self.__on_delete = on_delete
         self.__on_export = on_export
@@ -54,6 +47,7 @@ class GameCard(ctk.CTkFrame):
     def _build(self):
         s = self.__session
         l = self.__lang
+        t = self._t
         win_rate = float(s.get("win_rate") or 0)
         mode_label = l("card", "mode_manual") if s["mode"] == "manual" else l("card", "mode_auto")
 
@@ -62,24 +56,24 @@ class GameCard(ctk.CTkFrame):
             self,
             text=s["name"],
             font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=TEXT_PRIMARY,
+            text_color=t.TEXT_PRIMARY,
             anchor="w",
         ).pack(fill="x", padx=16, pady=(14, 8))
 
         # GAMES chip (full width)
-        games_chip = ctk.CTkFrame(self, fg_color=CHIP_BG, corner_radius=10)
+        games_chip = ctk.CTkFrame(self, fg_color=t.CHIP_BG, corner_radius=10)
         games_chip.pack(fill="x", padx=16, pady=(0, 6))
 
         ctk.CTkLabel(
-            games_chip, text="GAMES",
+            games_chip, text=l("card", "chip_games"),
             font=ctk.CTkFont(size=9, weight="bold"),
-            text_color=TEXT_MUTED, anchor="w",
+            text_color=t.TEXT_MUTED, anchor="w",
         ).pack(side="left", padx=(12, 4), pady=10)
 
         ctk.CTkLabel(
             games_chip, text=f"x{s['total_games']}",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=TEXT_PRIMARY, anchor="e",
+            text_color=t.TEXT_PRIMARY, anchor="e",
         ).pack(side="right", padx=(4, 12), pady=10)
 
         # CARDS + TYPE chips side by side
@@ -88,30 +82,30 @@ class GameCard(ctk.CTkFrame):
         chips_row.columnconfigure(0, weight=1)
         chips_row.columnconfigure(1, weight=1)
 
-        doors_chip = ctk.CTkFrame(chips_row, fg_color=CHIP_BG, corner_radius=10)
+        doors_chip = ctk.CTkFrame(chips_row, fg_color=t.CHIP_BG, corner_radius=10)
         doors_chip.grid(row=0, column=0, sticky="ew", padx=(0, 4))
         ctk.CTkLabel(
-            doors_chip, text="CARDS",
+            doors_chip, text=l("card", "chip_cards"),
             font=ctk.CTkFont(size=9, weight="bold"),
-            text_color=TEXT_MUTED, anchor="w",
+            text_color=t.TEXT_MUTED, anchor="w",
         ).pack(side="left", padx=(10, 4), pady=10)
         ctk.CTkLabel(
             doors_chip, text=f"x{s['door_count']}",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=TEXT_PRIMARY, anchor="e",
+            text_color=t.TEXT_PRIMARY, anchor="e",
         ).pack(side="right", padx=(4, 10), pady=10)
 
-        type_chip = ctk.CTkFrame(chips_row, fg_color=CHIP_BG, corner_radius=10)
+        type_chip = ctk.CTkFrame(chips_row, fg_color=t.CHIP_BG, corner_radius=10)
         type_chip.grid(row=0, column=1, sticky="ew", padx=(4, 0))
         ctk.CTkLabel(
-            type_chip, text="TYPE",
+            type_chip, text=l("card", "chip_type"),
             font=ctk.CTkFont(size=9, weight="bold"),
-            text_color=TEXT_MUTED, anchor="w",
+            text_color=t.TEXT_MUTED, anchor="w",
         ).pack(side="left", padx=(10, 4), pady=10)
         ctk.CTkLabel(
             type_chip, text=mode_label,
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=TEXT_PRIMARY, anchor="e",
+            text_color=t.TEXT_PRIMARY, anchor="e",
         ).pack(side="right", padx=(4, 10), pady=10)
 
         # Win rate row
@@ -127,11 +121,11 @@ class GameCard(ctk.CTkFrame):
         ctk.CTkLabel(
             wr_row, text=l("card", "win_rate"),
             font=ctk.CTkFont(size=12),
-            text_color=TEXT_SECONDARY, anchor="e",
+            text_color=t.TEXT_SECONDARY, anchor="e",
         ).pack(side="left", padx=(6, 0), pady=(6, 0))
 
         # Progress bar
-        bar_bg = ctk.CTkFrame(self, fg_color=BAR_BG, height=4, corner_radius=2)
+        bar_bg = ctk.CTkFrame(self, fg_color=t.BAR_BG, height=4, corner_radius=2)
         bar_bg.pack(fill="x", padx=16, pady=(0, 12))
         bar_bg.pack_propagate(False)
         ratio = min(win_rate / 100, 1.0)
@@ -141,7 +135,7 @@ class GameCard(ctk.CTkFrame):
             )
 
         # Separator
-        ctk.CTkFrame(self, fg_color=BORDER, height=1).pack(fill="x")
+        ctk.CTkFrame(self, fg_color=t.BORDER, height=1).pack(fill="x")
 
         # Action buttons
         btn_row = ctk.CTkFrame(self, fg_color="transparent")
@@ -153,7 +147,7 @@ class GameCard(ctk.CTkFrame):
                 text=l("card", "play"),
                 font=ctk.CTkFont(size=12, weight="bold"),
                 fg_color=ACCENT, hover_color=ACCENT_HOVER,
-                text_color=TEXT_PRIMARY,
+                text_color="#FFFFFF",
                 height=32, corner_radius=8,
                 command=lambda sid=s: self.__on_play(sid),
             ).pack(side="left", padx=(0, 4))
@@ -162,8 +156,8 @@ class GameCard(ctk.CTkFrame):
             btn_row,
             text=l("card", "export"),
             font=ctk.CTkFont(size=12),
-            fg_color=CHIP_BG, hover_color=BORDER,
-            text_color=TEXT_SECONDARY,
+            fg_color=t.CHIP_BG, hover_color=t.BORDER,
+            text_color=t.TEXT_SECONDARY,
             height=32, corner_radius=8,
             command=lambda sid=s["id"]: self.__on_export(sid),
         ).pack(side="left", padx=(0, 4))
@@ -186,39 +180,47 @@ class MainScreen(ctk.CTkFrame):
     """
 
     def __init__(self, parent, app):
-        super().__init__(parent, fg_color=BG)
+        self._t = app.theme
+        super().__init__(parent, fg_color=self._t.BG)
         self.__app = app
         self.__db = app.db
         self.__lang = app.lang
-        # Clear old stale callbacks before registering fresh one
+
+        # Register observers — clear stale callbacks first
         self.__lang.clear_callbacks()
         self.__lang.on_change(self._refresh)
+
+        self._t.clear_callbacks()
+        self._t.on_change(self._on_theme_change)
+
         self._build()
         self._refresh()
 
     def __str__(self):
         return "MainScreen()"
 
+    # ── Build ─────────────────────────────────────────────────────────────
+
     def _build(self):
+        t = self._t
+
         # Header
-        header = ctk.CTkFrame(self, fg_color="#050505", height=64)
+        header = ctk.CTkFrame(self, fg_color=t.HEADER_BG, height=64)
         header.pack(fill="x")
         header.pack_propagate(False)
 
-        # Logo: T G on top-left/top-right, L K on bottom-left/bottom-right, circle center
         logo_canvas = tk.Canvas(
             header, width=48, height=48,
-            bg="#050505", highlightthickness=0,
+            bg=t.HEADER_BG, highlightthickness=0,
         )
         logo_canvas.pack(side="left", padx=(20, 8), pady=8)
-        _draw_logo(logo_canvas, "#050505", TEXT_PRIMARY)
+        _draw_logo(logo_canvas, t.HEADER_BG, "#FFFFFF")
 
-        # App title
         ctk.CTkLabel(
             header,
             text=self.__lang("main_screen", "title"),
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=TEXT_PRIMARY,
+            text_color="#FFFFFF",
         ).pack(side="left", padx=8)
 
         # Right controls
@@ -229,32 +231,43 @@ class MainScreen(ctk.CTkFrame):
             right,
             text=self.__lang("main_screen", "language"),
             font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color=BORDER, hover_color="#333333",
-            text_color=TEXT_PRIMARY,
+            fg_color=t.BORDER_DEEP, hover_color="#334155",
+            text_color="#FFFFFF",
             width=48, height=32, corner_radius=8,
             command=self._toggle_language,
         )
         self._lang_btn.pack(side="right", pady=16)
 
+        self._theme_btn = ctk.CTkButton(
+            right,
+            text=self._theme_btn_label(),
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color=t.BORDER_DEEP, hover_color="#334155",
+            text_color="#FFFFFF",
+            width=90, height=32, corner_radius=8,
+            command=self._toggle_theme,
+        )
+        self._theme_btn.pack(side="right", pady=16, padx=(0, 8))
+
         self._export_btn = ctk.CTkButton(
             right,
             text=self.__lang("main_screen", "export_all"),
             font=ctk.CTkFont(size=12),
-            fg_color=BORDER, hover_color="#333333",
-            text_color=TEXT_SECONDARY,
+            fg_color=t.BORDER_DEEP, hover_color="#334155",
+            text_color="#FFFFFF",
             height=32, corner_radius=8,
             command=self._export_all,
         )
         self._export_btn.pack(side="right", pady=16, padx=(0, 8))
 
         # Global stats row
-        self._stats_frame = ctk.CTkFrame(self, fg_color="#050505")
+        self._stats_frame = ctk.CTkFrame(self, fg_color=t.HEADER_BG)
         self._stats_frame.pack(fill="x")
 
         # Scrollable cards
         self._scroll = ctk.CTkScrollableFrame(
-            self, fg_color=BG,
-            scrollbar_button_color=BORDER,
+            self, fg_color=t.BG,
+            scrollbar_button_color=t.BORDER,
             scrollbar_button_hover_color=ACCENT,
         )
         self._scroll.pack(fill="both", expand=True, padx=24, pady=(16, 80))
@@ -265,21 +278,43 @@ class MainScreen(ctk.CTkFrame):
             text="+",
             font=ctk.CTkFont(size=28, weight="bold"),
             fg_color=ACCENT, hover_color=ACCENT_HOVER,
-            text_color=TEXT_PRIMARY,
+            text_color="#FFFFFF",
             width=64, height=64, corner_radius=32,
             command=self._open_new_game_dialog,
         )
         self._fab.place(relx=1.0, rely=1.0, anchor="se", x=-28, y=-28)
+
+    # ── Theme helpers ─────────────────────────────────────────────────────
+
+    def _theme_btn_label(self) -> str:
+        key = "theme_to_light" if self._t.is_dark else "theme_to_dark"
+        return self.__lang("main_screen", key)
+
+    def _on_theme_change(self):
+        """Rebuild the whole screen after theme switch (deferred to avoid widget-in-callback issues)."""
+        self.after(0, self._do_rebuild)
+
+    def _do_rebuild(self):
+        self.configure(fg_color=self._t.BG)
+        for w in self.winfo_children():
+            w.destroy()
+        self._build()
+        self._refresh()
+
+    # ── Refresh (language + theme button text) ────────────────────────────
 
     def _refresh(self):
         if hasattr(self, "_lang_btn"):
             self._lang_btn.configure(text=self.__lang("main_screen", "language"))
         if hasattr(self, "_export_btn"):
             self._export_btn.configure(text=self.__lang("main_screen", "export_all"))
+        if hasattr(self, "_theme_btn"):
+            self._theme_btn.configure(text=self._theme_btn_label())
         self._draw_stats()
         self._draw_cards()
 
     def _draw_stats(self):
+        t = self._t
         for w in self._stats_frame.winfo_children():
             w.destroy()
 
@@ -288,7 +323,7 @@ class MainScreen(ctk.CTkFrame):
 
         items = [
             (str(stats.get("total_sessions", 0)), l("main_screen", "total_sessions")),
-            (str(stats.get("total_games", 0)), l("main_screen", "total_games")),
+            (str(stats.get("total_games", 0)),    l("main_screen", "total_games")),
             (f"{stats.get('overall_win_rate', 0):.1f}%", l("main_screen", "win_rate")),
         ]
 
@@ -303,14 +338,15 @@ class MainScreen(ctk.CTkFrame):
             ctk.CTkLabel(
                 chip, text=label,
                 font=ctk.CTkFont(size=10),
-                text_color=TEXT_MUTED,
+                text_color=t.TEXT_MUTED,
             ).pack()
 
-        ctk.CTkFrame(self._stats_frame, fg_color=BORDER, height=1).pack(
+        ctk.CTkFrame(self._stats_frame, fg_color=t.BORDER, height=1).pack(
             fill="x", side="bottom"
         )
 
     def _draw_cards(self):
+        t = self._t
         for w in self._scroll.winfo_children():
             w.destroy()
 
@@ -321,7 +357,7 @@ class MainScreen(ctk.CTkFrame):
                 self._scroll,
                 text=self.__lang("main_screen", "no_games"),
                 font=ctk.CTkFont(size=16),
-                text_color=TEXT_MUTED,
+                text_color=t.TEXT_MUTED,
             ).pack(expand=True, pady=80)
             return
 
@@ -329,7 +365,7 @@ class MainScreen(ctk.CTkFrame):
         for i, session in enumerate(sessions):
             row, col = divmod(i, cols)
             card = GameCard(
-                self._scroll, session, self.__lang,
+                self._scroll, session, self.__lang, self._t,
                 on_play=self._play_session,
                 on_delete=self._delete_session,
                 on_export=self._export_session,
@@ -339,12 +375,13 @@ class MainScreen(ctk.CTkFrame):
         for c in range(cols):
             self._scroll.columnconfigure(c, weight=1)
 
+    # ── Navigation & actions ──────────────────────────────────────────────
+
     def _open_new_game_dialog(self):
         from ui.new_game_dialog import NewGameDialog
         dialog = NewGameDialog(self, self.__app)
         dialog.grab_set()
         self.wait_window(dialog)
-        # After dialog closes, check what it produced
         if not self.winfo_exists():
             return
         pending_game = getattr(dialog, "pending_game", None)
@@ -377,27 +414,47 @@ class MainScreen(ctk.CTkFrame):
             self.__db.delete_session(session["id"])
             self._refresh()
 
+    def _ask_save_path(self, default_name: str) -> str | None:
+        path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            filetypes=[("Excel файл", "*.xlsx"), ("Все файлы", "*.*")],
+            initialfile=default_name,
+            title=self.__lang("main_screen", "export_all"),
+        )
+        return path if path else None
+
     def _export_session(self, session_id: int):
+        import datetime
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_path = self._ask_save_path(f"session_{session_id}_{ts}.xlsx")
+        if not save_path:
+            return
         try:
-            path = self.__db.export_to_csv(session_id=session_id)
-            messagebox.showinfo("Export", self.__lang("export_success", path=path))
+            self.__db.export_to_excel(session_id=session_id, filepath=save_path)
+            messagebox.showinfo("Export", self.__lang("export_success", path=save_path))
         except Exception as e:
             messagebox.showerror(self.__lang("error"), str(e))
 
     def _export_all(self):
+        import datetime
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_path = self._ask_save_path(f"all_sessions_{ts}.xlsx")
+        if not save_path:
+            return
         try:
-            path = self.__db.export_to_csv()
-            messagebox.showinfo("Export", self.__lang("export_success", path=path))
+            self.__db.export_to_excel(filepath=save_path)
+            messagebox.showinfo("Export", self.__lang("export_success", path=save_path))
         except Exception as e:
             messagebox.showerror(self.__lang("error"), str(e))
 
     def _show_auto_results(self, results: dict, num_games: int, doors: int):
+        t = self._t
         l = self.__lang
         dialog = ctk.CTkToplevel(self)
         dialog.title(l("auto_result", "title"))
         dialog.geometry("440x380")
         dialog.resizable(False, False)
-        dialog.configure(fg_color="#050505")
+        dialog.configure(fg_color=t.HEADER_BG)
         dialog.grab_set()
 
         dialog.update_idletasks()
@@ -408,11 +465,11 @@ class MainScreen(ctk.CTkFrame):
         ctk.CTkLabel(
             dialog, text=l("auto_result", "title"),
             font=ctk.CTkFont(size=20, weight="bold"),
-            text_color=TEXT_PRIMARY,
+            text_color=t.TEXT_PRIMARY,
         ).pack(pady=(28, 16))
 
-        info = ctk.CTkFrame(dialog, fg_color="#0D1117",
-                            corner_radius=14, border_color=BORDER, border_width=1)
+        info = ctk.CTkFrame(dialog, fg_color=t.BG_DEEP,
+                            corner_radius=14, border_color=t.BORDER_DEEP, border_width=1)
         info.pack(fill="x", padx=32, pady=8)
 
         rows = [
@@ -424,15 +481,16 @@ class MainScreen(ctk.CTkFrame):
             row = ctk.CTkFrame(info, fg_color="transparent")
             row.pack(fill="x", padx=16, pady=6)
             ctk.CTkLabel(row, text=label, font=ctk.CTkFont(size=12),
-                         text_color=TEXT_SECONDARY, anchor="w").pack(side="left")
+                         text_color=t.TEXT_SECONDARY, anchor="w").pack(side="left")
             ctk.CTkLabel(row, text=value, font=ctk.CTkFont(size=13, weight="bold"),
-                         text_color=TEXT_PRIMARY, anchor="e").pack(side="right")
+                         text_color=t.TEXT_PRIMARY, anchor="e").pack(side="right")
 
         bar_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         bar_frame.pack(fill="x", padx=32, pady=8)
-        ctk.CTkLabel(bar_frame, text=f"{l('auto_result', 'win_rate_label')} {results['win_rate']:.1f}%",
+        ctk.CTkLabel(bar_frame,
+                     text=f"{l('auto_result', 'win_rate_label')} {results['win_rate']:.1f}%",
                      font=ctk.CTkFont(size=11), text_color=ACCENT).pack(anchor="w")
-        bg = ctk.CTkFrame(bar_frame, fg_color=BORDER, height=8, corner_radius=4)
+        bg = ctk.CTkFrame(bar_frame, fg_color=t.BORDER_DEEP, height=8, corner_radius=4)
         bg.pack(fill="x", pady=(4, 0))
         bg.pack_propagate(False)
         ctk.CTkFrame(bg, fg_color=ACCENT, height=8, corner_radius=4).place(
@@ -445,7 +503,7 @@ class MainScreen(ctk.CTkFrame):
             dialog,
             text=l("auto_result", "conclusion", rate=results["win_rate"]),
             font=ctk.CTkFont(size=12),
-            text_color=TEXT_SECONDARY,
+            text_color=t.TEXT_SECONDARY,
             wraplength=380,
         ).pack(padx=32, pady=12)
 
@@ -454,10 +512,15 @@ class MainScreen(ctk.CTkFrame):
             text=l("auto_result", "close"),
             font=ctk.CTkFont(size=13, weight="bold"),
             fg_color=ACCENT, hover_color=ACCENT_HOVER,
-            text_color=TEXT_PRIMARY,
+            text_color="#FFFFFF",
             height=44, corner_radius=10,
             command=dialog.destroy,
         ).pack(padx=32, pady=(0, 24), fill="x")
 
+    # ── Toggle handlers ───────────────────────────────────────────────────
+
     def _toggle_language(self):
         self.__lang.switch()
+
+    def _toggle_theme(self):
+        self._t.switch()

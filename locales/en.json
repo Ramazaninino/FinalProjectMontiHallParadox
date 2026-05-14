@@ -1,5 +1,9 @@
 {
   "app_title": "Monty Hall Paradox",
+  "splash": {
+    "title": "The Monty Hall\nParadox",
+    "start": "Start a game"
+  },
   "main_screen": {
     "title": "THE MONTY HALL PARADOX",
     "subtitle": "Game History",
@@ -7,10 +11,15 @@
     "total_sessions": "Game Sessions",
     "total_games": "Total Games",
     "win_rate": "Overall Win Rate",
-    "export_all": "Export CSV",
-    "language": "RU"
+    "export_all": "Export Excel",
+    "language": "RU",
+    "theme_to_light": "☀ Light",
+    "theme_to_dark": "🌙 Dark"
   },
   "card": {
+    "chip_games": "GAMES",
+    "chip_cards": "CARDS",
+    "chip_type": "TYPE",
     "doors": "doors",
     "games": "games",
     "wins": "wins",
@@ -19,7 +28,7 @@
     "mode_auto": "Auto",
     "play": "Play",
     "delete": "Delete",
-    "export": "CSV"
+    "export": "Excel"
   },
   "new_game": {
     "title": "New Game",
@@ -38,6 +47,10 @@
     "error_doors": "Select 3 to 20 doors"
   },
   "game_screen": {
+    "header_title": "THE MONTY HALL PARADOX",
+    "game_info": "GAME INFO",
+    "pro_tip_title": "pro tip",
+    "pro_tip_text": "In the Monty Hall paradox, switching your choice always doubles your probability of winning!",
     "back": "← Back",
     "params_title": "Game Parameters",
     "doors": "Doors:",
@@ -57,7 +70,8 @@
     "new_round": "New Round",
     "finish": "Finish",
     "door_closed": "Door",
-    "door_goat": "Goat",
+    "door_original_pick": "First pick",
+    "door_goat": "Empty",
     "door_prize": "Prize!",
     "door_open_goat": "🐐",
     "door_open_prize": "🏆",

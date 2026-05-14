@@ -3,6 +3,7 @@
 import customtkinter as ctk
 from database.db_manager import DatabaseManager
 from utils.language import Language
+from utils.theme import Theme
 
 # Configure CustomTkinter appearance
 ctk.set_appearance_mode("dark")
@@ -21,12 +22,19 @@ class App(ctk.CTk):
         # Core services
         self.db = DatabaseManager()
         self.lang = Language("ru")
+        self.theme = Theme("dark")
+
+        # Update window bg when theme changes
+        self.theme.on_change(self._on_theme_change)
 
         # Window setup
         self.title(self.lang("app_title"))
         self.geometry("1280x800")
         self.minsize(1024, 650)
-        self.configure(fg_color="#000000")
+        self.configure(fg_color=self.theme.BG)
+
+    def _on_theme_change(self):
+        self.configure(fg_color=self.theme.BG)
 
         # Screen container
         self._container = ctk.CTkFrame(self, fg_color="transparent")

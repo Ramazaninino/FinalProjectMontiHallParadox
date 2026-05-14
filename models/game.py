@@ -94,6 +94,7 @@ class BaseGame(ABC):
         ]
         self._monty_opened = []
         self._current_selected = None
+        self._original_selected = None
         self._phase = "select"
 
     def _monty_opens_doors(self):
@@ -124,7 +125,9 @@ class BaseGame(ABC):
 
         selected = self._doors[door_number - 1]
         selected.select()
+        selected.mark_as_original_pick()
         self._current_selected = selected
+        self._original_selected = selected   # remember first pick
         self._monty_opens_doors()
         self._phase = "switch_or_keep"
         return True
@@ -158,9 +161,17 @@ class BaseGame(ABC):
         return self._resolve_result()
 
     def _resolve_result(self) -> bool:
-        """Open all doors, record round result."""
+        """Open selected door, original door, and the prize door."""
+        self._current_selected.open()
+
+        # Show the original first pick (if player switched)
+        if self._original_selected and not self._original_selected.is_open:
+            self._original_selected.open()
+
+        # Reveal the prize door so player sees where it was
         for door in self._doors:
-            door.open()
+            if door.has_prize and not door.is_open:
+                door.open()
 
         won = self._current_selected.has_prize
         self._total_rounds += 1

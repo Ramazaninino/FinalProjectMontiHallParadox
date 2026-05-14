@@ -1,7 +1,10 @@
 import sqlite3
-import csv
 import os
 from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import (
+    Font, PatternFill, Alignment, Border, Side
+)
 
 
 class DatabaseManager:
@@ -195,48 +198,175 @@ class DatabaseManager:
         row = cursor.fetchone()
         return dict(row) if row else {}
 
-    # CSV Export (Week 13: Data Formats)
-    def export_to_csv(self, session_id: int | None = None) -> str:
+    # ── Excel helpers ──────────────────────────────────────────────────────
+    @staticmethod
+    def _hdr_fill(hex_color: str) -> PatternFill:
+        return PatternFill("solid", fgColor=hex_color)
+
+    @staticmethod
+    def _thin_border() -> Border:
+        s = Side(style="thin", color="CCCCCC")
+        return Border(left=s, right=s, top=s, bottom=s)
+
+    @staticmethod
+    def _set_col_widths(ws, widths: list):
+        from openpyxl.utils import get_column_letter
+        for i, w in enumerate(widths, start=1):
+            ws.column_dimensions[get_column_letter(i)].width = w
+
+    def _write_title(self, ws, text: str, ncols: int):
+        """Write a merged title row at the top of the sheet."""
+        ws.append([text])
+        cell = ws.cell(row=ws.max_row, column=1)
+        cell.font = Font(name="Calibri", size=14, bold=True, color="FFFFFF")
+        cell.fill = self._hdr_fill("EB1D49")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        ws.merge_cells(
+            start_row=ws.max_row, start_column=1,
+            end_row=ws.max_row, end_column=ncols
+        )
+        ws.row_dimensions[ws.max_row].height = 24
+
+    def _write_header_row(self, ws, headers: list):
+        """Write a styled header row."""
+        ws.append(headers)
+        row = ws.max_row
+        border = self._hdr_fill("1A1A1A")
+        for col, _ in enumerate(headers, start=1):
+            c = ws.cell(row=row, column=col)
+            c.font = Font(name="Calibri", bold=True, color="FFFFFF")
+            c.fill = border
+            c.alignment = Alignment(horizontal="center")
+            c.border = self._thin_border()
+        ws.row_dimensions[row].height = 18
+
+    def _write_data_row(self, ws, values: list, row_idx: int):
+        """Write a data row with alternating fill."""
+        ws.append(values)
+        row = ws.max_row
+        fill = self._hdr_fill("111111") if row_idx % 2 == 0 else self._hdr_fill("1A1A1A")
+        border = self._thin_border()
+        for col in range(1, len(values) + 1):
+            c = ws.cell(row=row, column=col)
+            c.font = Font(name="Calibri", color="FFFFFF")
+            c.fill = fill
+            c.alignment = Alignment(horizontal="center")
+            c.border = border
+
+    # Excel Export (Week 13: Data Formats — Excel)
+    def export_to_excel(self, session_id: int | None = None,
+                        filepath: str | None = None) -> str:
         """
-        Export sessions (or a specific session) to CSV.
-        Demonstrates: CSV data format handling
+        Export sessions (or a specific session) to a formatted Excel file.
+        Demonstrates: Excel data format handling (openpyxl)
         """
-        os.makedirs(self.EXPORTS_DIR, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if not filepath:
+            os.makedirs(self.EXPORTS_DIR, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            name = f"session_{session_id}_{timestamp}.xlsx" if session_id \
+                else f"all_sessions_{timestamp}.xlsx"
+            filepath = os.path.join(self.EXPORTS_DIR, name)
 
         if session_id:
-            filename = os.path.join(self.EXPORTS_DIR, f"session_{session_id}_{timestamp}.csv")
             sessions = [self.get_session_by_id(session_id)]
             rounds = self.get_rounds_for_session(session_id)
         else:
-            filename = os.path.join(self.EXPORTS_DIR, f"all_sessions_{timestamp}.csv")
             sessions = self.get_all_sessions()
             rounds = []
 
-        with open(filename, "w", newline="", encoding="utf-8-sig") as f:
-            writer = csv.writer(f)
+        filename = filepath
 
-            # Sessions header
-            writer.writerow(["=== GAME SESSIONS ==="])
-            writer.writerow(["ID", "Name", "Doors", "Mode", "Total Games",
-                             "Wins", "Win Rate %", "Created At"])
-            for s in sessions:
-                if s:
-                    writer.writerow([
-                        s["id"], s["name"], s["door_count"], s["mode"],
-                        s["total_games"], s["wins"],
-                        s.get("win_rate", 0), s["created_at"]
-                    ])
+        wb = Workbook()
+        wb.active.title = "Sessions"
+        ws_s = wb.active
+        ws_s.sheet_view.showGridLines = False
 
-            if rounds:
-                writer.writerow([])
-                writer.writerow(["=== ROUNDS ==="])
-                writer.writerow(["Round #", "Switched", "Won"])
-                for r in rounds:
-                    writer.writerow([
-                        r["round_number"],
-                        "Yes" if r["switched"] else "No",
-                        "Yes" if r["won"] else "No"
-                    ])
+        # ── Sheet 1: Sessions ────────────────────────────────────────────
+        SESSION_COLS = ["ID", "Name", "Doors", "Mode",
+                        "Total Games", "Wins", "Win Rate %", "Created At"]
+        self._write_title(ws_s, "Monty Hall — Game Sessions", len(SESSION_COLS))
+        ws_s.append([])  # spacer
+        self._write_header_row(ws_s, SESSION_COLS)
 
+        for idx, s in enumerate(sessions):
+            if not s:
+                continue
+            self._write_data_row(ws_s, [
+                s["id"],
+                s["name"],
+                s["door_count"],
+                s["mode"].capitalize(),
+                s["total_games"],
+                s["wins"],
+                float(s.get("win_rate") or 0),
+                s["created_at"],
+            ], idx)
+
+        self._set_col_widths(ws_s, [6, 22, 8, 10, 14, 8, 14, 18])
+
+        # ── Sheet 2: Rounds (only when exporting single session) ─────────
+        if rounds:
+            ws_r = wb.create_sheet(title="Rounds")
+            ws_r.sheet_view.showGridLines = False
+
+            session = sessions[0] if sessions else {}
+            title_text = f"Rounds — {session.get('name', '')} (ID {session.get('id', '')})"
+            ROUND_COLS = ["Round #", "Switched", "Won"]
+            self._write_title(ws_r, title_text, len(ROUND_COLS))
+            ws_r.append([])
+            self._write_header_row(ws_r, ROUND_COLS)
+
+            wins = losses = switched = stayed = 0
+            for idx, r in enumerate(rounds):
+                sw = bool(r["switched"])
+                won = bool(r["won"])
+                switched += sw
+                stayed += not sw
+                wins += won
+                losses += not won
+                self._write_data_row(ws_r, [
+                    r["round_number"],
+                    "Yes" if sw else "No",
+                    "Yes" if won else "No",
+                ], idx)
+
+            # Summary block
+            ws_r.append([])
+            self._write_title(ws_r, "Summary", len(ROUND_COLS))
+            summary_rows = [
+                ["Total rounds", len(rounds), ""],
+                ["Wins", wins, f"{wins / len(rounds) * 100:.1f}%"],
+                ["Losses", losses, f"{losses / len(rounds) * 100:.1f}%"],
+                ["Switched doors", switched, ""],
+                ["Stayed", stayed, ""],
+            ]
+            for idx, row in enumerate(summary_rows):
+                self._write_data_row(ws_r, row, idx)
+
+            self._set_col_widths(ws_r, [10, 12, 10])
+
+        # ── Sheet 3: Global Stats (only for full export) ─────────────────
+        if not session_id:
+            ws_g = wb.create_sheet(title="Global Stats")
+            ws_g.sheet_view.showGridLines = False
+            stats = self.get_global_stats()
+
+            STATS_COLS = ["Metric", "Value"]
+            self._write_title(ws_g, "Monty Hall — Overall Statistics", len(STATS_COLS))
+            ws_g.append([])
+            self._write_header_row(ws_g, STATS_COLS)
+
+            stat_rows = [
+                ("Total game sessions", stats.get("total_sessions", 0)),
+                ("Total games played", stats.get("total_games", 0)),
+                ("Total wins", stats.get("total_wins", 0)),
+                ("Overall win rate", f"{stats.get('overall_win_rate', 0):.1f}%"),
+                ("Total rounds recorded", stats.get("total_rounds", 0)),
+            ]
+            for idx, (metric, value) in enumerate(stat_rows):
+                self._write_data_row(ws_g, [metric, value], idx)
+
+            self._set_col_widths(ws_g, [28, 16])
+
+        wb.save(filename)
         return filename

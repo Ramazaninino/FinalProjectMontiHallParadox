@@ -1,5 +1,9 @@
 {
   "app_title": "Парадокс Монти Холла",
+  "splash": {
+    "title": "Парадокс\nМонти Холла",
+    "start": "Начать игру"
+  },
   "main_screen": {
     "title": "THE MONTY HALL PARADOX",
     "subtitle": "История игр",
@@ -7,10 +11,15 @@
     "total_sessions": "Игровых сессий",
     "total_games": "Всего игр",
     "win_rate": "Общий % побед",
-    "export_all": "Экспорт CSV",
-    "language": "EN"
+    "export_all": "Экспорт Excel",
+    "language": "EN",
+    "theme_to_light": "☀ Светлая",
+    "theme_to_dark": "🌙 Тёмная"
   },
   "card": {
+    "chip_games": "ИГРЫ",
+    "chip_cards": "КАРТЫ",
+    "chip_type": "ТИП",
     "doors": "дверей",
     "games": "игр",
     "wins": "побед",
@@ -19,7 +28,7 @@
     "mode_auto": "Авто",
     "play": "Играть",
     "delete": "Удалить",
-    "export": "CSV"
+    "export": "Excel"
   },
   "new_game": {
     "title": "Новая игра",
@@ -38,6 +47,10 @@
     "error_doors": "Выберите от 3 до 20 дверей"
   },
   "game_screen": {
+    "header_title": "ПАРАДОКС МОНТИ ХОЛЛА",
+    "game_info": "ИНФОРМАЦИЯ",
+    "pro_tip_title": "совет",
+    "pro_tip_text": "В парадоксе Монти Холла смена выбора всегда удваивает вероятность выигрыша!",
     "back": "← Назад",
     "params_title": "Параметры игры",
     "doors": "Дверей:",
@@ -57,7 +70,8 @@
     "new_round": "Новый раунд",
     "finish": "Завершить",
     "door_closed": "Дверь",
-    "door_goat": "Коза",
+    "door_original_pick": "Начальный выбор",
+    "door_goat": "Пусто",
     "door_prize": "Приз!",
     "door_open_goat": "🐐",
     "door_open_prize": "🏆",
