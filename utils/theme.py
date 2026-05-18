@@ -17,14 +17,14 @@ class Theme:
         "TEXT_PRIMARY":   "#FFFFFF",
         "TEXT_SECONDARY": "#888888",
         "TEXT_MUTED":     "#555555",
-        "CHIP_BG":      "#242424",
+        "CHIP_BG":      "#FFFFFF",
         "BAR_BG":       "#2A2A2A",
         "BAR_BG_DEEP":  "#333333",
         "FIELD_BG":     "#1A1A1A",
         "SUCCESS":      "#22C55E",
-        "DOOR_BG":      "#1A1A1A",
-        "DOOR_NUM":     "#FFFFFF",
-        "DOOR_BORDER":  "#2A2A2A",
+        "DOOR_BG":      "#FFFFFF",
+        "DOOR_NUM":     "#1A1A1A",
+        "DOOR_BORDER":  "#EBEBEB",
     }
 
     LIGHT = {

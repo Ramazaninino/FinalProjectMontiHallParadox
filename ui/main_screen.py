@@ -75,7 +75,7 @@ class GameCard(ctk.CTkFrame):
         ctk.CTkLabel(
             games_chip, text=f"x{s['total_games']}",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=t.TEXT_PRIMARY, anchor="e",
+            text_color="#1A1A1A", anchor="e",
         ).pack(side="right", padx=(4, 12), pady=10)
 
         # CARDS + TYPE chips side by side
@@ -94,7 +94,7 @@ class GameCard(ctk.CTkFrame):
         ctk.CTkLabel(
             doors_chip, text=f"x{s['door_count']}",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=t.TEXT_PRIMARY, anchor="e",
+            text_color="#1A1A1A", anchor="e",
         ).pack(side="right", padx=(4, 10), pady=10)
 
         type_chip = ctk.CTkFrame(chips_row, fg_color=t.CHIP_BG, corner_radius=10)
@@ -107,7 +107,7 @@ class GameCard(ctk.CTkFrame):
         ctk.CTkLabel(
             type_chip, text=mode_label,
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=t.TEXT_PRIMARY, anchor="e",
+            text_color="#1A1A1A", anchor="e",
         ).pack(side="right", padx=(4, 10), pady=10)
 
         # Win rate row

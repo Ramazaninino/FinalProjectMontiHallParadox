@@ -182,7 +182,7 @@ class GameScreen(ctk.CTkFrame):
             text=l("game_screen", "back"),
             font=ctk.CTkFont(size=12),
             fg_color=t.CHIP_BG, hover_color=t.BORDER_DEEP,
-            text_color=t.TEXT_SECONDARY,
+            text_color="#1A1A1A",
             height=36, corner_radius=18, width=100,
             command=self._go_back,
         ).pack(side="left", padx=(12, 0), pady=22)
@@ -433,7 +433,7 @@ class GameScreen(ctk.CTkFrame):
             text=l("game_screen", "keep"),
             font=ctk.CTkFont(size=14),
             fg_color=t.CHIP_BG, hover_color=t.BORDER_DEEP,
-            text_color=t.TEXT_PRIMARY,
+            text_color="#1A1A1A",
             height=56, corner_radius=12,
             command=self._on_keep,
         ).pack(fill="x")
@@ -487,7 +487,7 @@ class GameScreen(ctk.CTkFrame):
             text=l("game_screen", "finish"),
             font=ctk.CTkFont(size=13),
             fg_color=t.CHIP_BG, hover_color=t.BORDER_DEEP,
-            text_color=t.TEXT_SECONDARY,
+            text_color="#1A1A1A",
             height=52, corner_radius=12,
             command=self._go_back,
         ).pack(fill="x")
