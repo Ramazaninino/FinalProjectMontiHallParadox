@@ -1,6 +1,5 @@
-import tkinter as tk
 import customtkinter as ctk
-from ui.main_screen import _draw_logo
+from utils.logo import get_logo
 
 ACCENT = "#EB1D49"
 
@@ -23,17 +22,16 @@ class SplashScreen(ctk.CTkFrame):
         t = self._t
         l = self.__lang
 
-        # Top-left logo
-        logo_canvas = tk.Canvas(
-            self, width=48, height=48,
-            bg=t.BG, highlightthickness=0,
+        # Top-left logo — SVG asset, theme-aware
+        logo_lbl = ctk.CTkLabel(
+            self, image=get_logo(is_dark=t.is_dark, size=(42, 45)),
+            text="", fg_color="transparent",
         )
-        logo_canvas.place(x=20, y=16)
-        _draw_logo(logo_canvas, t.BG, t.TEXT_PRIMARY)
+        logo_lbl.place(x=20, y=17)
 
         # Center content
         center = ctk.CTkFrame(self, fg_color="transparent")
-        center.place(relx=0.5, rely=0.45, anchor="center")
+        center.place(relx=0.5, rely=0.42, anchor="center")
 
         # Big red title
         ctk.CTkLabel(

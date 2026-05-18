@@ -370,3 +370,89 @@ class DatabaseManager:
 
         wb.save(filename)
         return filename
+
+    def export_to_csv(self, session_id: int | None = None,
+                      filepath: str | None = None) -> str:
+        import csv
+        if not filepath:
+            os.makedirs(self.EXPORTS_DIR, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            name = f"session_{session_id}_{timestamp}.csv" if session_id \
+                else f"all_sessions_{timestamp}.csv"
+            filepath = os.path.join(self.EXPORTS_DIR, name)
+
+        if session_id:
+            sessions = [self.get_session_by_id(session_id)]
+            rounds = self.get_rounds_for_session(session_id)
+        else:
+            sessions = self.get_all_sessions()
+            rounds = []
+
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ID", "Name", "Doors", "Mode",
+                             "Total Games", "Wins", "Win Rate %", "Created At"])
+            for s in sessions:
+                if not s:
+                    continue
+                writer.writerow([
+                    s["id"], s["name"], s["door_count"], s["mode"].capitalize(),
+                    s["total_games"], s["wins"],
+                    round(float(s.get("win_rate") or 0), 2), s["created_at"],
+                ])
+            if rounds:
+                writer.writerow([])
+                writer.writerow(["Round #", "Switched", "Won"])
+                for r in rounds:
+                    writer.writerow([
+                        r["round_number"],
+                        "Yes" if r["switched"] else "No",
+                        "Yes" if r["won"] else "No",
+                    ])
+        return filepath
+
+    def export_to_json(self, session_id: int | None = None,
+                       filepath: str | None = None) -> str:
+        import json
+        if not filepath:
+            os.makedirs(self.EXPORTS_DIR, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            name = f"session_{session_id}_{timestamp}.json" if session_id \
+                else f"all_sessions_{timestamp}.json"
+            filepath = os.path.join(self.EXPORTS_DIR, name)
+
+        if session_id:
+            sessions = [self.get_session_by_id(session_id)]
+            rounds = self.get_rounds_for_session(session_id)
+        else:
+            sessions = self.get_all_sessions()
+            rounds = []
+
+        data = []
+        for s in sessions:
+            if not s:
+                continue
+            entry = {
+                "id": s["id"],
+                "name": s["name"],
+                "door_count": s["door_count"],
+                "mode": s["mode"],
+                "total_games": s["total_games"],
+                "wins": s["wins"],
+                "win_rate": round(float(s.get("win_rate") or 0), 2),
+                "created_at": s["created_at"],
+            }
+            if rounds:
+                entry["rounds"] = [
+                    {
+                        "round_number": r["round_number"],
+                        "switched": bool(r["switched"]),
+                        "won": bool(r["won"]),
+                    }
+                    for r in rounds
+                ]
+            data.append(entry)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return filepath

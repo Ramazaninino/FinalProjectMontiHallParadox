@@ -10,7 +10,7 @@ class Language:
     """
 
     LOCALES_DIR = "locales"
-    SUPPORTED = ("ru", "en")
+    SUPPORTED = ("ru", "en", "kg")
 
     def __init__(self, locale: str = "ru"):
         self.__locale = locale if locale in self.SUPPORTED else "ru"
@@ -37,8 +37,9 @@ class Language:
             self.__data = {}
 
     def switch(self):
-        """Toggle between ru and en."""
-        self.__locale = "en" if self.__locale == "ru" else "ru"
+        """Cycle through ru → en → kg → ru."""
+        idx = self.SUPPORTED.index(self.__locale)
+        self.__locale = self.SUPPORTED[(idx + 1) % len(self.SUPPORTED)]
         self._load()
         for cb in self.__callbacks:
             cb()

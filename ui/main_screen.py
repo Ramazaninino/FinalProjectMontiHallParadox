@@ -1,17 +1,6 @@
-import tkinter as tk
 import customtkinter as ctk
 from tkinter import messagebox, filedialog
-
-
-def _draw_logo(canvas, bg_color: str, fg_color: str):
-    """Draw the T/G/L/K logo with a circle in the center on a tk.Canvas (48x48)."""
-    canvas.configure(bg=bg_color)
-    font = ("Arial", 11, "bold")
-    canvas.create_text(10, 12, text="T", font=font, fill=fg_color, anchor="center")
-    canvas.create_text(38, 12, text="G", font=font, fill=fg_color, anchor="center")
-    canvas.create_text(10, 36, text="L", font=font, fill=fg_color, anchor="center")
-    canvas.create_text(38, 36, text="K", font=font, fill=fg_color, anchor="center")
-    canvas.create_oval(12, 6, 36, 42, outline=fg_color, width=1.5)
+from utils.logo import get_logo
 
 # Accent never changes between themes
 ACCENT       = "#EB1D49"
@@ -32,7 +21,9 @@ class GameCard(ctk.CTkFrame):
             border_color=t.BORDER,
             border_width=1,
             corner_radius=16,
+            height=300,
         )
+        self.pack_propagate(False)
         self.__session = session
         self.__lang = lang
         self._t = theme
@@ -55,10 +46,21 @@ class GameCard(ctk.CTkFrame):
         ctk.CTkLabel(
             self,
             text=s["name"],
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=15, weight="bold"),
             text_color=t.TEXT_PRIMARY,
             anchor="w",
-        ).pack(fill="x", padx=16, pady=(14, 8))
+        ).pack(fill="x", padx=16, pady=(14, 2))
+
+        # Sub-line: wins / total
+        total = int(s.get("total_games") or 0)
+        wins  = int(s.get("wins") or 0)
+        ctk.CTkLabel(
+            self,
+            text=f"{wins} {l('card', 'wins')} / {total} {l('card', 'games')}",
+            font=ctk.CTkFont(size=11),
+            text_color=t.TEXT_MUTED,
+            anchor="w",
+        ).pack(fill="x", padx=16, pady=(0, 8))
 
         # GAMES chip (full width)
         games_chip = ctk.CTkFrame(self, fg_color=t.CHIP_BG, corner_radius=10)
@@ -152,15 +154,16 @@ class GameCard(ctk.CTkFrame):
                 command=lambda sid=s: self.__on_play(sid),
             ).pack(side="left", padx=(0, 4))
 
-        ctk.CTkButton(
+        export_btn = ctk.CTkButton(
             btn_row,
             text=l("card", "export"),
             font=ctk.CTkFont(size=12),
             fg_color=t.CHIP_BG, hover_color=t.BORDER,
             text_color=t.TEXT_SECONDARY,
             height=32, corner_radius=8,
-            command=lambda sid=s["id"]: self.__on_export(sid),
-        ).pack(side="left", padx=(0, 4))
+        )
+        export_btn.configure(command=lambda b=export_btn: self.__on_export(s["id"], b))
+        export_btn.pack(side="left", padx=(0, 4))
 
         ctk.CTkButton(
             btn_row,
@@ -204,65 +207,86 @@ class MainScreen(ctk.CTkFrame):
     def _build(self):
         t = self._t
 
-        # Header
-        header = ctk.CTkFrame(self, fg_color=t.HEADER_BG, height=64)
+        # ════════════════════════════════════════════════════════════
+        # HEADER — same bg as main, red title, outline pill buttons
+        # ════════════════════════════════════════════════════════════
+        header = ctk.CTkFrame(self, fg_color=t.BG, height=72)
         header.pack(fill="x")
         header.pack_propagate(False)
 
-        logo_canvas = tk.Canvas(
-            header, width=48, height=48,
-            bg=t.HEADER_BG, highlightthickness=0,
-        )
-        logo_canvas.pack(side="left", padx=(20, 8), pady=8)
-        _draw_logo(logo_canvas, t.HEADER_BG, "#FFFFFF")
+        # Logo — SVG asset, theme-aware
+        logo_img = get_logo(is_dark=self._t.is_dark, size=(36, 39))
+        ctk.CTkLabel(
+            header, image=logo_img, text="",
+            fg_color="transparent",
+        ).pack(side="left", padx=(24, 0), pady=16)
 
+        # Title — centered, RED
         ctk.CTkLabel(
             header,
             text=self.__lang("main_screen", "title"),
-            font=ctk.CTkFont(size=16, weight="bold"),
-            text_color="#FFFFFF",
-        ).pack(side="left", padx=8)
+            font=ctk.CTkFont(family="Arial", size=18, weight="bold"),
+            text_color=ACCENT,
+        ).pack(side="left", expand=True)
 
-        # Right controls
+        # ── Toolbar: outline pill buttons ─────────────────────────
         right = ctk.CTkFrame(header, fg_color="transparent")
         right.pack(side="right", padx=20, fill="y")
 
-        self._lang_btn = ctk.CTkButton(
-            right,
-            text=self.__lang("main_screen", "language"),
-            font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color=t.BORDER_DEEP, hover_color="#334155",
-            text_color="#FFFFFF",
-            width=48, height=32, corner_radius=8,
-            command=self._toggle_language,
+        btn_cfg = dict(
+            font=ctk.CTkFont(size=12),
+            fg_color="transparent",
+            border_width=1,
+            border_color=t.BORDER_DEEP,
+            hover_color=t.CHIP_BG,
+            text_color=t.TEXT_PRIMARY,
+            height=34,
+            corner_radius=17,
         )
-        self._lang_btn.pack(side="right", pady=16)
+
+        self._lang_btn = ctk.CTkButton(
+            right, width=54,
+            text=self.__lang("main_screen", "language"),
+            command=self._toggle_language,
+            **btn_cfg,
+        )
+        self._lang_btn.pack(side="right", pady=19)
 
         self._theme_btn = ctk.CTkButton(
-            right,
+            right, width=90,
             text=self._theme_btn_label(),
-            font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color=t.BORDER_DEEP, hover_color="#334155",
-            text_color="#FFFFFF",
-            width=90, height=32, corner_radius=8,
             command=self._toggle_theme,
+            **btn_cfg,
         )
-        self._theme_btn.pack(side="right", pady=16, padx=(0, 8))
+        self._theme_btn.pack(side="right", pady=19, padx=(0, 8))
 
         self._export_btn = ctk.CTkButton(
-            right,
+            right, width=84,
             text=self.__lang("main_screen", "export_all"),
-            font=ctk.CTkFont(size=12),
-            fg_color=t.BORDER_DEEP, hover_color="#334155",
-            text_color="#FFFFFF",
-            height=32, corner_radius=8,
-            command=self._export_all,
+            **btn_cfg,
         )
-        self._export_btn.pack(side="right", pady=16, padx=(0, 8))
+        self._export_btn.configure(command=self._export_all)
+        self._export_btn.pack(side="right", pady=19, padx=(0, 8))
 
-        # Global stats row
-        self._stats_frame = ctk.CTkFrame(self, fg_color=t.HEADER_BG)
+        # Thin separator under header
+        ctk.CTkFrame(self, fg_color=t.BORDER, height=1).pack(fill="x")
+
+        # Stats row
+        self._stats_frame = ctk.CTkFrame(self, fg_color=t.BG)
         self._stats_frame.pack(fill="x")
+
+        # Section header — "История игр" / "Game History"
+        self._section_header = ctk.CTkFrame(self, fg_color="transparent")
+        self._section_header.pack(fill="x", padx=28, pady=(16, 4))
+
+        self._section_title_lbl = ctk.CTkLabel(
+            self._section_header,
+            text=self.__lang("main_screen", "subtitle"),
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=t.TEXT_PRIMARY,
+            anchor="w",
+        )
+        self._section_title_lbl.pack(side="left")
 
         # Scrollable cards
         self._scroll = ctk.CTkScrollableFrame(
@@ -270,16 +294,16 @@ class MainScreen(ctk.CTkFrame):
             scrollbar_button_color=t.BORDER,
             scrollbar_button_hover_color=ACCENT,
         )
-        self._scroll.pack(fill="both", expand=True, padx=24, pady=(16, 80))
+        self._scroll.pack(fill="both", expand=True, padx=24, pady=(0, 80))
 
-        # FAB
+        # FAB — 56×56 red circle
         self._fab = ctk.CTkButton(
             self,
             text="+",
-            font=ctk.CTkFont(size=28, weight="bold"),
+            font=ctk.CTkFont(size=24, weight="bold"),
             fg_color=ACCENT, hover_color=ACCENT_HOVER,
             text_color="#FFFFFF",
-            width=64, height=64, corner_radius=32,
+            width=56, height=56, corner_radius=28,
             command=self._open_new_game_dialog,
         )
         self._fab.place(relx=1.0, rely=1.0, anchor="se", x=-28, y=-28)
@@ -295,6 +319,8 @@ class MainScreen(ctk.CTkFrame):
         self.after(0, self._do_rebuild)
 
     def _do_rebuild(self):
+        from utils.logo import clear_cache
+        clear_cache()
         self.configure(fg_color=self._t.BG)
         for w in self.winfo_children():
             w.destroy()
@@ -310,6 +336,8 @@ class MainScreen(ctk.CTkFrame):
             self._export_btn.configure(text=self.__lang("main_screen", "export_all"))
         if hasattr(self, "_theme_btn"):
             self._theme_btn.configure(text=self._theme_btn_label())
+        if hasattr(self, "_section_title_lbl"):
+            self._section_title_lbl.configure(text=self.__lang("main_screen", "subtitle"))
         self._draw_stats()
         self._draw_cards()
 
@@ -342,7 +370,7 @@ class MainScreen(ctk.CTkFrame):
             ).pack()
 
         ctk.CTkFrame(self._stats_frame, fg_color=t.BORDER, height=1).pack(
-            fill="x", side="bottom"
+            fill="x", side="bottom", pady=(4, 0)
         )
 
     def _draw_cards(self):
@@ -374,6 +402,10 @@ class MainScreen(ctk.CTkFrame):
 
         for c in range(cols):
             self._scroll.columnconfigure(c, weight=1)
+
+        total_rows = (len(sessions) + cols - 1) // cols
+        for r in range(total_rows):
+            self._scroll.rowconfigure(r, uniform="card_row")
 
     # ── Navigation & actions ──────────────────────────────────────────────
 
@@ -414,38 +446,85 @@ class MainScreen(ctk.CTkFrame):
             self.__db.delete_session(session["id"])
             self._refresh()
 
-    def _ask_save_path(self, default_name: str) -> str | None:
+    def _ask_save_path(self, default_name: str, ext: str) -> str | None:
+        ext_map = {
+            ".xlsx": [("Excel файл", "*.xlsx")],
+            ".csv":  [("CSV файл", "*.csv")],
+            ".json": [("JSON файл", "*.json")],
+        }
         path = filedialog.asksaveasfilename(
-            defaultextension=".xlsx",
-            filetypes=[("Excel файл", "*.xlsx"), ("Все файлы", "*.*")],
+            defaultextension=ext,
+            filetypes=ext_map.get(ext, [("Все файлы", "*.*")]),
             initialfile=default_name,
             title=self.__lang("main_screen", "export_all"),
         )
         return path if path else None
 
-    def _export_session(self, session_id: int):
+    def _show_export_menu(self, anchor_widget, on_format, below: bool = False):
+        """Show a small popup with CSV / Excel / JSON buttons near anchor_widget."""
+        t = self._t
+        l = self.__lang
+
+        popup = ctk.CTkToplevel(self)
+        popup.overrideredirect(True)
+        popup.configure(fg_color=t.BG_CARD)
+        popup.attributes("-topmost", True)
+
+        anchor_widget.update_idletasks()
+        x = anchor_widget.winfo_rootx()
+        h = 110
+        y = (anchor_widget.winfo_rooty() + anchor_widget.winfo_height() + 4
+             if below else anchor_widget.winfo_rooty() - h - 4)
+        popup.geometry(f"130x{h}+{x}+{y}")
+
+        frame = ctk.CTkFrame(popup, fg_color=t.BG_CARD,
+                             border_color=t.BORDER, border_width=1, corner_radius=10)
+        frame.pack(fill="both", expand=True, padx=1, pady=1)
+
+        def pick(fmt):
+            popup.destroy()
+            on_format(fmt)
+
+        for fmt_key, fmt in [("export_csv", "csv"), ("export_excel", "excel"), ("export_json", "json")]:
+            ctk.CTkButton(
+                frame,
+                text=l("card", fmt_key),
+                font=ctk.CTkFont(size=12),
+                fg_color="transparent", hover_color=t.CHIP_BG,
+                text_color=t.TEXT_PRIMARY, anchor="w",
+                height=30, corner_radius=6,
+                command=lambda f=fmt: pick(f),
+            ).pack(fill="x", padx=6, pady=2)
+
+        popup.bind("<FocusOut>", lambda e: popup.destroy())
+        popup.focus_set()
+
+    def _do_export(self, session_id: int | None, fmt: str):
         import datetime
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = self._ask_save_path(f"session_{session_id}_{ts}.xlsx")
+        base = f"session_{session_id}_{ts}" if session_id else f"all_sessions_{ts}"
+        ext_map = {"csv": ".csv", "excel": ".xlsx", "json": ".json"}
+        ext = ext_map[fmt]
+        save_path = self._ask_save_path(base + ext, ext)
         if not save_path:
             return
         try:
-            self.__db.export_to_excel(session_id=session_id, filepath=save_path)
+            if fmt == "excel":
+                self.__db.export_to_excel(session_id=session_id, filepath=save_path)
+            elif fmt == "csv":
+                self.__db.export_to_csv(session_id=session_id, filepath=save_path)
+            elif fmt == "json":
+                self.__db.export_to_json(session_id=session_id, filepath=save_path)
             messagebox.showinfo("Export", self.__lang("export_success", path=save_path))
         except Exception as e:
             messagebox.showerror(self.__lang("error"), str(e))
 
+    def _export_session(self, session_id: int, anchor):
+        self._show_export_menu(anchor, lambda fmt: self._do_export(session_id, fmt))
+
     def _export_all(self):
-        import datetime
-        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = self._ask_save_path(f"all_sessions_{ts}.xlsx")
-        if not save_path:
-            return
-        try:
-            self.__db.export_to_excel(filepath=save_path)
-            messagebox.showinfo("Export", self.__lang("export_success", path=save_path))
-        except Exception as e:
-            messagebox.showerror(self.__lang("error"), str(e))
+        self._show_export_menu(self._export_btn, lambda fmt: self._do_export(None, fmt),
+                               below=True)
 
     def _show_auto_results(self, results: dict, num_games: int, doors: int):
         t = self._t
