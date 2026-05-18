@@ -1,8 +1,0 @@
-﻿=== GAME SESSIONS ===
-ID,Name,Doors,Mode,Total Games,Wins,Win Rate %,Created At
-1,Test Game,3,manual,5,3,60.0,08.05.2026 00:03
-
-=== ROUNDS ===
-Round #,Switched,Won
-1,Yes,Yes
-2,No,No
